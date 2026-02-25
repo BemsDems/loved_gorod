@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "754431644910",
+    "firebase_url": "https://quickdoodle-e386e-default-rtdb.firebaseio.com",
+    "project_id": "quickdoodle-e386e",
+    "storage_bucket": "quickdoodle-e386e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:754431644910:android:8880fff0adc18187168fff",
+        "android_client_info": {
+          "package_name": "com.example.loved_gorod"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSWe3L59UQOE55TmgbJUStsUdBpNYToC0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:754431644910:android:7eff4f8b10c1a43b168fff",
+        "android_client_info": {
+          "package_name": "com.example.quick_doodle"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSWe3L59UQOE55TmgbJUStsUdBpNYToC0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
