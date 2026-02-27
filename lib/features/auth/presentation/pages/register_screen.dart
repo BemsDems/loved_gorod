@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:loved_gorod/components/keyboard_dismisser.dart';
 
+import '../../../../components/app_snackbars.dart';
+import '../../../../components/keyboard_dismisser.dart';
+import '../../../../core/utils/validation_mixin.dart';
+import '../../domain/usecases/auth_usecases.dart';
+import '../../../../core/di/injection_container.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -10,98 +14,83 @@ class RegisterScreen extends StatefulWidget {
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends State<RegisterScreen> with ValidationMixin {
   final _formKey = GlobalKey<FormState>();
 
   final _fioController = TextEditingController();
-  final _loginController = TextEditingController();
+  final _loginController = TextEditingController(); // This is the email
   final _passwordController = TextEditingController();
   bool _isObscure = true;
+  bool _isLoading = false;
 
   void _register() async {
     if (_formKey.currentState!.validate()) {
       FocusScope.of(context).unfocus();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: const BoxDecoration(
-                  color: Colors.white24,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.check_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 16),
-              const Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      setState(() => _isLoading = true);
+      
+      final registerUseCase = sl<RegisterUseCase>();
+      final result = await registerUseCase(
+        _fioController.text.trim(),
+        _loginController.text.trim(),
+        _passwordController.text,
+      );
+
+      if (mounted) {
+        setState(() => _isLoading = false);
+        result.fold(
+          (error) => AppSnackbars.showError(context, error),
+          (user) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
                   children: [
-                    Text(
-                      'Успех!',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        color: Colors.white24,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.check_rounded,
                         color: Colors.white,
+                        size: 20,
                       ),
                     ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Аккаунт создан. Теперь войдите.',
-                      style: TextStyle(color: Colors.white70, fontSize: 13),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Успех!',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Аккаунт создан. Вы вошли в систему.',
+                            style: TextStyle(color: Colors.white70, fontSize: 13),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: Colors.green.shade600,
+                elevation: 10,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                margin: const EdgeInsets.fromLTRB(20, 0, 20, 40),
+                duration: const Duration(seconds: 2),
               ),
-            ],
-          ),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.green.shade600,
-          elevation: 10,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          margin: const EdgeInsets.fromLTRB(20, 0, 20, 40),
-          duration: const Duration(seconds: 2),
-        ),
-      );
-
-      await Future.delayed(const Duration(milliseconds: 300));
-
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          PageRouteBuilder(
-            pageBuilder:
-                (context, animation, secondaryAnimation) => const LoginScreen(),
-            transitionsBuilder: (
-              context,
-              animation,
-              secondaryAnimation,
-              child,
-            ) {
-              const begin = Offset(0.0, 0.1);
-              const end = Offset.zero;
-              const curve = Curves.easeOut;
-              var tween = Tween(
-                begin: begin,
-                end: end,
-              ).chain(CurveTween(curve: curve));
-              var offsetAnimation = animation.drive(tween);
-
-              return FadeTransition(
-                opacity: animation,
-                child: SlideTransition(position: offsetAnimation, child: child),
-              );
-            },
-            transitionDuration: const Duration(milliseconds: 500),
-          ),
+            );
+          },
         );
       }
     }
@@ -114,7 +103,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-
       body: SafeArea(
         child: KeyboardDismisser(
           child: SingleChildScrollView(
@@ -143,9 +131,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       },
                     ),
                   ),
-
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 0),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 0),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -191,9 +178,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(
-                                color: colorScheme.outline,
-                              ),
+                              borderSide: BorderSide(color: colorScheme.outline),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -205,22 +190,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             filled: true,
                             fillColor: colorScheme.surfaceContainerLowest,
                           ),
-                          validator: (v) => v!.isEmpty ? 'Введите ФИО' : null,
+                          validator: (v) => validateRequired(v, 'ФИО'),
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _loginController,
+                          keyboardType: TextInputType.emailAddress,
                           decoration: InputDecoration(
-                            labelText: 'Логин',
+                            labelText: 'Email',
                             prefixIcon: const Icon(Icons.alternate_email),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(
-                                color: colorScheme.outline,
-                              ),
+                              borderSide: BorderSide(color: colorScheme.outline),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -232,7 +216,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             filled: true,
                             fillColor: colorScheme.surfaceContainerLowest,
                           ),
-                          validator: (v) => v!.isEmpty ? 'Введите логин' : null,
+                          validator: validateEmail,
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
@@ -248,17 +232,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     : Icons.visibility_outlined,
                               ),
                               onPressed:
-                                  () =>
-                                      setState(() => _isObscure = !_isObscure),
+                                  () => setState(() => _isObscure = !_isObscure),
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(
-                                color: colorScheme.outline,
-                              ),
+                              borderSide: BorderSide(color: colorScheme.outline),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -270,29 +251,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             filled: true,
                             fillColor: colorScheme.surfaceContainerLowest,
                           ),
-                          validator:
-                              (v) =>
-                                  v!.length < 6 ? 'Минимум 6 символов' : null,
+                          validator: validatePassword,
                         ),
                         const SizedBox(height: 32),
                         SizedBox(
                           height: 56,
+                          width: double.infinity,
                           child: FilledButton(
-                            onPressed: _register,
+                            onPressed: _isLoading ? null : _register,
                             style: FilledButton.styleFrom(
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
                             ),
-                            child: const Text(
-                              'Зарегистрироваться',
-                              style: TextStyle(fontSize: 18),
-                            ),
+                            child: _isLoading 
+                                ? const CircularProgressIndicator(color: Colors.white)
+                                : const Text(
+                                    'Зарегистрироваться',
+                                    style: TextStyle(fontSize: 18),
+                                  ),
                           ),
                         ),
                         const SizedBox(height: 24),
-
-                        // 5. Ссылка на вход
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [

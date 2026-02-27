@@ -44,6 +44,12 @@ dependencies:
   flutter_map_location_marker: ^9.0.0
   image_picker: ^1.0.7
   firebase_core: ^4.4.0
+  flutter_bloc: ^9.1.1
+  firebase_auth: ^6.1.4
+  firebase_database: ^12.1.3
+  get_it: ^9.2.1
+  equatable: ^2.0.8
+  dartz: ^0.10.1
 
 dev_dependencies:
   flutter_test:
@@ -56,12 +62,11 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
   flutter_launcher_icons: ^0.13.1
-
-flutter_launcher_icons:
-  android: "launcher_icon"
-  ios: true
-  image_path: "assets/icon.png"
-  min_sdk_android: 21
+  mocktail: ^1.0.4
+  firebase_auth_mocks: ^0.15.1
+  bloc_test: ^10.0.0
+  integration_test:
+    sdk: flutter
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

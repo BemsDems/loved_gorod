@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:loved_gorod/models/issue.dart';
-import 'package:loved_gorod/screens/issue_detail_screen.dart';
+import 'package:loved_gorod/features/issues_map/domain/entities/issue_entity.dart';
+import 'package:loved_gorod/features/issues_map/presentation/pages/issue_detail_screen.dart';
 
 class IssuePreviewCard extends StatelessWidget {
-  final Issue issue;
+  final IssueEntity issue;
 
   const IssuePreviewCard({super.key, required this.issue});
 

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 
@@ -57,6 +58,7 @@ class GeocodingRepository {
         return "Ошибка сервера карт (${response.statusCode})";
       }
     } catch (e) {
+      debugPrint('[DATA LAYER ERROR] Class: GeocodingRepository | Method: getAddress | Exception: $e');
       return "Ошибка сети: $e";
     }
   }
@@ -108,6 +110,7 @@ class GeocodingRepository {
         log("Ошибка DaData: ${response.statusCode}");
       }
     } catch (e) {
+      debugPrint('[DATA LAYER ERROR] Class: GeocodingRepository | Method: getCoordinates | Exception: $e');
       log("Ошибка сети: $e");
     }
     return null;

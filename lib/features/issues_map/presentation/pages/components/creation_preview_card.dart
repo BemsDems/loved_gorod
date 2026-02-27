@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:loved_gorod/components/app_snackbars.dart';
-import 'package:loved_gorod/screens/create_issue_screen.dart';
+import 'package:loved_gorod/features/issues_map/presentation/pages/create_issue_screen.dart';
 
 class CreationPreviewCard extends StatelessWidget {
   final LatLng point;

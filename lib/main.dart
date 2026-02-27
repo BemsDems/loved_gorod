@@ -1,17 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:loved_gorod/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:loved_gorod/features/issues_map/presentation/bloc/issues_bloc.dart';
 
-import 'data/mock_repository.dart';
+import 'core/di/injection_container.dart' as di;
+import 'features/auth/presentation/pages/login_screen.dart';
+import 'features/issues_map/presentation/pages/map_screen.dart';
 import 'firebase_options.dart';
-import 'screens/login_screen.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  runApp(const MyApp());
+import 'dart:async';
+
+import 'core/utils/app_bloc_observer.dart';
+
+void main() {
+  runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    
+    // Step 1: Настройка глобального перехвата ошибок
+    FlutterError.onError = (FlutterErrorDetails details) {
+      debugPrint('[GLOBAL FATAL ERROR] Описание: ${details.exception} | StackTrace: ${details.stack}');
+    };
+
+    Bloc.observer = AppBlocObserver();
+    debugPrint('APP STARTING...');
+    
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    await di.init(); // Initialize Dependency Injection
+
+    runApp(const MyApp());
+  }, (error, stack) {
+    debugPrint('[GLOBAL FATAL ERROR] Описание: $error | StackTrace: $stack');
+  });
 }
 
 class MyApp extends StatelessWidget {
@@ -19,11 +42,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => IssuesRepository())],
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthBloc>(
+          create: (_) => di.sl<AuthBloc>()..add(const AuthSubscriptionRequested()),
+        ),
+        BlocProvider<IssuesBloc>(
+          create: (_) => di.sl<IssuesBloc>()..add(const IssuesSubscriptionRequested()),
+        ),
+      ],
       child: MaterialApp(
         title: 'Любимый город',
-        debugShowCheckedModeBanner: false,
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
             seedColor: Colors.deepPurple,
@@ -51,8 +80,30 @@ class MyApp extends StatelessWidget {
             fillColor: Colors.grey[50],
           ),
         ),
-        home: const LoginScreen(),
+        home: const _AuthWrapper(),
       ),
+    );
+  }
+}
+
+class _AuthWrapper extends StatelessWidget {
+  const _AuthWrapper();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        debugPrint('[AUTH WRAPPER] State: $state');
+        if (state is AuthAuthenticated) {
+          return const MapScreen();
+        } else if (state is AuthUnauthenticated) {
+          return const LoginScreen();
+        }
+        // AuthInitial or AuthLoading — show a splash/loading screen
+        return const Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        );
+      },
     );
   }
 }

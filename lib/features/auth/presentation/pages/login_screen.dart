@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:loved_gorod/components/keyboard_dismisser.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'main_map/map_screen.dart';
+import '../../../../components/app_snackbars.dart';
+import '../../../../components/keyboard_dismisser.dart';
+import '../../../../core/utils/validation_mixin.dart';
+import '../../domain/usecases/auth_usecases.dart';
+import '../../../../core/di/injection_container.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -11,19 +15,32 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen> with ValidationMixin {
   final _formKey = GlobalKey<FormState>();
   final _loginController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isObscure = true;
+  bool _isLoading = false;
 
-  void _login() {
+  void _login() async {
     if (_formKey.currentState!.validate()) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const MapScreen()),
-        (route) => false,
+      setState(() => _isLoading = true);
+      
+      final loginUseCase = sl<LoginUseCase>();
+      final result = await loginUseCase(
+        _loginController.text.trim(),
+        _passwordController.text,
       );
+
+      if (mounted) {
+        setState(() => _isLoading = false);
+        result.fold(
+          (error) => AppSnackbars.showError(context, error),
+          (user) {
+            // Navigator not needed here, AuthBloc will handle navigation globally in main.dart
+          },
+        );
+      }
     }
   }
 
@@ -63,9 +80,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 48),
                   TextFormField(
                     controller: _loginController,
+                    keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
-                      labelText: 'Логин',
-                      prefixIcon: const Icon(Icons.person_outline),
+                      labelText: 'Email',
+                      prefixIcon: const Icon(Icons.email_outlined),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -83,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       filled: true,
                       fillColor: colorScheme.surfaceContainerLowest,
                     ),
-                    validator: (v) => v!.isEmpty ? 'Введите логин' : null,
+                    validator: validateEmail,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
@@ -118,23 +136,25 @@ class _LoginScreenState extends State<LoginScreen> {
                       filled: true,
                       fillColor: colorScheme.surfaceContainerLowest,
                     ),
-                    validator: (v) => v!.isEmpty ? 'Введите пароль' : null,
+                    validator: validatePassword,
                   ),
                   const SizedBox(height: 32),
                   SizedBox(
                     width: double.infinity,
                     height: 56,
                     child: FilledButton(
-                      onPressed: _login,
+                      onPressed: _isLoading ? null : _login,
                       style: FilledButton.styleFrom(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
-                      child: const Text(
-                        'Войти',
-                        style: TextStyle(fontSize: 18),
-                      ),
+                      child: _isLoading 
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                              'Войти',
+                              style: TextStyle(fontSize: 18),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 24),
